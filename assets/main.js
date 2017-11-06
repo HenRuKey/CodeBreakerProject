@@ -1,65 +1,129 @@
-function guess(){
-    let answer = document.getElementById('answer').value;
-    let attempt = document.getElementById('attempt').value;
-    let code = document.getElementById('code');
-    let guessingDiv = document.getElementById('guessing-div');
-    let input = document.getElementById('user-guess').value;
-    let message = document.getElementById('message');
-    let replayDiv = document.getElementById('replay-div');
-    let results = document.getElementById('results');
+let answer = document.getElementById('answer');
+let attempt = document.getElementById('attempt');
+let message = document.getElementById('message');
+let results = document.getElementById('results');
+let code = document.getElementById('code');
+let guessing = document.getElementById('guessing-div');
+let replay = document.getElementById('replay-div');
 
-    message.innerHTML = "";
-
-    if(answer == "") {
-        answer = Math.floor(Math.random() * 10000).toString();
-        while(answer.length < 4) {
-            answer = "0" + answer;
-        }
-        document.getElementById('answer').value = answer;
+function guess() {
+    let input = document.getElementById('user-guess');
+    // Set values if values are null
+    if (answer.value == "" || attempt.value == "") {
+      setHiddenFields();
     }
-    if(attempt == "") {
-        attempt = 0;
-    }
+    // Check for valid user input
+    let valid = validateInput(input);
 
-    if(input.length != 4) {
-        message.innerHTML = 'Guesses must be exactly 4 characters long.';
-        return;
-    } else {
-        attempt++;
-        document.getElementById('attempt').value = attempt;
-    }
+    if (valid) {
+      // Check for correct values
+      let allCorrect = getResults(input);
+      // Implement winning conditions
+      if(allCorrect) {
+        setMessage("You Win! :)");
+        showAnswer(allCorrect);
+        showReplay();
+      } else if (attempt.value == 10) {
+        setMessage("You Lose! :(");
+        showAnswer(allCorrect);
+        showReplay();
+      }
+      else {
+        setMessage("Incorrect: Try Again");
+      }
+  } // End valid conditional
+} // End guess Function
 
-    let correct = 0;
-    let html = '<div class="row"><span class="col-md-6">' + input + '</span><div class="col-md-6">';
-    for(i = 0; i < input.length; i++)
-    {
-        if(input.charAt(i) == answer.charAt(i))
-        {
-            html += '<span class="glyphicon glyphicon-ok"></span>';
-            correct++;
-        } else if (answer.indexOf(input.charAt(i)) > -1) {
-            html += '<span class="glyphicon glyphicon-transfer"></span>';
-        } else {
-            html += '<span class="glyphicon glyphicon-remove"></span>';
-        }
-    }
-    html += '</div></div>';
+function setHiddenFields() {
+  // Generate random integer
+  let randNum = Math.random(0, 9999) * 10000;
+  answer.value = Math.floor(randNum);
+  // Loop until value is four digits
+  while (answer.value.length < 4) {
+    answer.value = "0" +  answer.value;
+  }
+  // Set number of attempts to zero
+  attempt.value = 0;
+} // End setHiddenFields Function
 
-    results.innerHTML += html;
+function setMessage(displayMsg) {
+  // Display message passed by the program
+  message.innerHTML = displayMsg;
+} // End setMessage Function
 
-    if(correct == input.length) {
-        message.innerHTML = 'You Win! :)';
-        code.className += " success";
-        code.innerHTML = answer;
-        guessingDiv.style = "display:none";
-        replayDiv.style = "display:block";
-    } else if(attempt >= 10) {
-        message.innerHTML = 'You Lose! :(';
-        code.className += " failure";
-        code.innerHTML = answer;
-        guessingDiv.style = "display:none";
-        replayDiv.style = "display:block";
-    } else {
-        message.innerHTML = 'Incorrect, try again.';
+function validateInput(input) {
+  if (input.value.length == 4) {
+    attempt.value++;
+    return true;
+  }
+  else {
+    setMessage("Invalid Input: Must be four digits exactly")
+    return false;
+  }
+} // End validateInput Function
+
+function getResults(input) {
+  // Create string to display results to user
+  let displayString = "";
+  // Create variable to count correct guesses
+  let correct = 0;
+  // Loop through each character in string
+  for (i = 0; i < answer.value.length; i++) {
+    // If the values are the same
+    if (input.value[i] == answer.value[i]) {
+      //displayString += "<span class=\"glyphicon glyphicon-ok\">" + input.value[i] + "</span>";
+      displayString += "<span class=\"glyphicon glyphicon-ok\"></span>";
+      correct++;
     }
+    // If the values are different
+    else {
+      // Loop to check for char in answer
+      let charInAnswer = false;
+      for (j = 0; j < answer.value.length; j++) {
+          if (input.value[i] == answer.value[j]) {
+            charInAnswer = true;
+          }
+      }
+      // If char is contained in answer
+      if (charInAnswer) {
+        displayString += "<span class=\"glyphicon glyphicon-transfer\"></span>";
+      }
+      // If the value isn't found in answer
+      else {
+        displayString += "<span class=\"glyphicon glyphicon-remove\"></span>";
+      } // End else (value not contained in answer)
+    } // End else (values not equal)
+  } // End for loop
+  // Display results to user
+  let msg = "";
+  let divRow = "<span class=\"col-md-6\">";
+  msg += "<div class=\"row\">" + divRow + input.value + "</span>";
+  msg += divRow + displayString + "</span><div class=\"col-md-6\">";
+  results.innerHTML += msg;
+  // Check for game win
+  if (correct == answer.value.length) {
+    return true;
+  }
+  else {
+    return false;
+  }
+} // End getResults Function
+
+function showAnswer(win) {
+  // Reveal answer
+  code.innerHTML = "<strong>" + answer.value + "</strong>";
+  // Add string value to class name
+  if (win) {
+    code.className += " success";
+  }
+  else {
+    code.className += " failure";
+  }
+} // End showAnswer Function
+
+function showReplay() {
+  guessing.style.display = 'none';
+  replay.style.display = 'block';
+  answer.value = '';
+  attempt.value = '';
 }
